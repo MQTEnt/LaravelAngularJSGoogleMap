@@ -46,12 +46,12 @@
 										</div>
 									</div>
 									<div class="form-group">
-										<div class="col-sm-5 col-sm-offset-7">
+										<div class="col-sm-4 col-sm-offset-8">
 											<div class="col-sm-6">
-												<button class="btn btn-success" ng-click="editLngLat()">Edit place</button>
+												<button class="btn btn-success pull-right" ng-click="editLngLat()"><span class="glyphicon glyphicon-map-marker"></span></button>
 											</div>
 											<div class="col-sm-6">
-												<button id="btnUpdate" class="btn btn-success" ng-click="updatePlace(selectedPlace.id)">Update</button>
+												<button id="btnUpdate" class="btn btn-success pull-right" ng-click="updatePlace(selectedPlace.id)">Update</button>
 											</div>
 										</div>
 									</div>
@@ -190,7 +190,7 @@
 	//Click map event
 	function placeMarker(location) 
 	{
-		if(modeEdit==true)
+		if(modeEdit==true) //Nếu là chế độ sửa marker...
 		{
 			//Mỗi lần click thì xóa marker cũ: setMap(null) sau đó gán giá trị mới cho marker
 			if(typeof newMarker !='undefined') //Vì lần đầu tiên newMarker undifined nên không dùng được setMap()
@@ -202,53 +202,70 @@
 				map: map
 			});
 			//Khai báo và hiển thị thông tin marker
-			infowindow = new google.maps.InfoWindow({
-				content: 'Latitude: ' + location.lat() + '<br>Longitude: ' + location.lng()
+			var infoWindow = new google.maps.InfoWindow({
+				content: 'Latitude: ' + location.lat() + '<br>Longitude: ' + location.lng() +'<br> Click <b>Update</b> if you want to choose this place'
 			});
-			infowindow.open(map,newMarker);
+			infoWindow.open(map,newMarker);
+			//console.log(newMarker);
 		}
 	}
 
+	//AngularJS
 	var gmApp=angular.module('googlemapApp',[]);
 	gmApp.controller('googlemapCtrl',function($scope, $http){
 		$scope.selectedPlace='unknow';
-		//Get list 
-		$http.get('/place/getList').success(function(dataPlaces)
-		{
-			angular.forEach(dataPlaces,function(value, key)
+		//Khai báo hàm getList() (lấy danh sách marker và hiển thị) 
+		$scope.getList=function(){
+			$http.get('/place/getList').success(function(dataPlaces)
 			{
-				//Tạo marker
-				var marker = new google.maps.Marker({
-					position: {lat: parseFloat(value.lat), lng: parseFloat(value.lon)},
-					map: map
-				});
-				markers.push(marker);
-				//Gán giá trị cho marker vừa tạo
-				var markerProp = new Object(); //Tạo object mới chứa thông tin của marker
-				markerProp.id=value.id;
-				markerProp.name=value.name;
-				markerProp.description=value.description;
-				markerProp.lat=value.lat;
-				markerProp.lon=value.lon;
-				markerProp.votes=value.votes;
-
-				//Click marer event
-				marker.addListener('click',function(){
-					$scope.selectedPlace=markerProp;
-					//Chú ý sử dụng $apply() để đồng bộ với controller
-					$scope.$apply();
-					//Hiển thị infowindow cho marker
-					infowindows = new google.maps.InfoWindow({
-						content: value.name
+				angular.forEach(dataPlaces,function(value, key)
+				{
+					//Tạo marker
+					var marker = new google.maps.Marker({
+						position: {lat: parseFloat(value.lat), lng: parseFloat(value.lon)},
+						map: map
 					});
-					infowindows.open(map,marker);
-				});
-			});	
-		});
+					markers.push(marker);
+					//Gán giá trị cho marker vừa tạo
+					var markerProp = new Object(); //Tạo object mới chứa thông tin của marker
+					markerProp.id=value.id;
+					markerProp.name=value.name;
+					markerProp.description=value.description;
+					markerProp.lat=value.lat;
+					markerProp.lon=value.lon;
+					markerProp.votes=value.votes;
+
+					//Khai báo infowindow cho marker
+					var infowindow = new google.maps.InfoWindow({
+							content: value.name
+					});
+					//Click marer event
+					marker.addListener('click',function(){
+						$scope.selectedPlace=markerProp;
+						//Chú ý sử dụng $apply() để đồng bộ với controller
+						$scope.$apply();
+						//Hiển thị infowindow cho marker
+						infowindow.open(map,marker);
+					});
+				});	
+			});
+		};
+		//Gọi hàm getList();
+		$scope.getList();
+
 		//Update...
 		$scope.updatePlace=function(id){
-			var data=$.param($scope.selectedPlace);
-			//console.log(data);
+			var data; //Dữ liệu gửi tới server
+			if(modeEdit==true)
+			{
+				//Thay đổi giá trị tọa độ (nếu có) để gửi tới server
+				$scope.selectedPlace.lat=newMarker.position.lat();
+				$scope.selectedPlace.lon=newMarker.position.lng();
+				//console.log(data);
+			}
+			data=$.param($scope.selectedPlace); //Gán dữ liệu
+
+			console.log(data);
 			$http({
 				method: 'POST',
 				url: '/place/'+id+'/update',
@@ -256,10 +273,17 @@
 				headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 			})
 			.success(function(response){
-				console.log(response);
+				//console.log(response);
+				if(modeEdit==true) //Nếu có thay đổi tọa độ thì tải lại các marker
+				{
+					modeEdit=false;//Đồng thời tắt chế độ edit
+					$scope.getList();
+					//Xóa điểm vừa edit khỏi bản đồ để không lưu lại cho những lần sửa sau
+					newMarker.setMap(null);
+				}
 				alert('Update Success');
 			}).error(function(response){
-				console.log(response);
+				//console.log(response);
 				alert('Error');
 			});
 		};
@@ -282,8 +306,6 @@
 					value.setMap(null);
 				});
 				setTimeout(function(){alert('Select new place for '+$scope.selectedPlace.name);}, 500); //Delay
-				//Xử lý lưu điểm mới trong hàm placeMarer (lưu điểm mới vào newMarker) 
-				//Sau đó từ hàm placeMarker gọi tới hàm Ajax trong controller AngularJS để xử lý lưu tọa độ mới
 			}
 			else
 				alert('Please chose marker to replace!');

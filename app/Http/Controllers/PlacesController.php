@@ -42,8 +42,11 @@ class PlacesController extends Controller
 	public function update($id)
 	{
 		$place=Place::findOrFail($id);
+		//Kiểm tra tọa độ mới (nếu có) có trùng với điểm nào đã có trước đó không... (Update sau)
 		$place->update([
 			'name' => Request::get('name'),
+			'lat' =>Request::get('lat'),
+			'lon' =>Request::get('lon'),
 			'description' => Request::get('description'),
 			'votes' => Request::get('votes')
 		]);
