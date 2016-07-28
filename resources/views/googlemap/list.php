@@ -46,11 +46,14 @@
 										</div>
 									</div>
 									<div class="form-group">
-										<div class="col-sm-4 col-sm-offset-8">
-											<div class="col-sm-6">
+										<div class="col-sm-5 col-sm-offset-7">
+											<div class="col-sm-4">
+												<button class="btn btn-danger pull-right" ng-click="deleteMarker()"><span class="glyphicon glyphicon-trash"></span></button>
+											</div>
+											<div class="col-sm-3">
 												<button class="btn btn-success pull-right" ng-click="editLngLat()"><span class="glyphicon glyphicon-map-marker"></span></button>
 											</div>
-											<div class="col-sm-6">
+											<div class="col-sm-5">
 												<button id="btnUpdate" class="btn btn-success pull-right" ng-click="updatePlace(selectedPlace.id)">Update</button>
 											</div>
 										</div>
@@ -169,6 +172,7 @@
 	var markers=[]; //Các điểm trên map
 	var newMarker;	//Điểm mới (dành cho chức năng sửa điểm mới)
 	var modeEdit=false;
+	var oldMarker;
 	function initMap()
 	{
 		//Thông tin map
@@ -274,10 +278,46 @@
 			})
 			.success(function(response){
 				//console.log(response);
+				var iRemove;
 				if(modeEdit==true) //Nếu có thay đổi tọa độ thì tải lại các marker
 				{
 					modeEdit=false;//Đồng thời tắt chế độ edit
-					$scope.getList();
+					//Xóa tọa độ cũ, hiển thị lại các điểm trên bản đồ
+					var i=0;
+					angular.forEach(markers,function(value, key){
+						if(value!=oldMarker)
+						{
+							value.setMap(map);
+							i++;
+						}
+						else
+							iRemove=i;
+					});
+					markers.splice(iRemove, 1)
+
+					//Tạo điểm mới sửa
+					var marker = new google.maps.Marker({
+						position: {lat: newMarker.position.lat(), lng: newMarker.position.lng()},
+						map: map
+					});
+					//Đưa vào mảng
+					markers.push(marker);
+					//Gán giá trị cho marker vừa sửa (bằng với các giá trị của object Angular đang chọn)
+					var markerProp = $scope.selectedPlace;
+
+					//Khai báo infowindow cho marker
+					var infowindow = new google.maps.InfoWindow({
+							content: $scope.selectedPlace.name
+					});
+					//Click marer event
+					marker.addListener('click',function(){
+						$scope.selectedPlace=markerProp;
+						//Chú ý sử dụng $apply() để đồng bộ với controller
+						$scope.$apply();
+						//Hiển thị infowindow cho marker
+						infowindow.open(map,marker);
+					});
+
 					//Xóa điểm vừa edit khỏi bản đồ để không lưu lại cho những lần sửa sau
 					newMarker.setMap(null);
 				}
@@ -293,14 +333,16 @@
 			//Dùng Ajax để kiểm tra user đã vote địa điểm này hay chưa, sau đó xử lý
 			alert('vote place');
 		};
+		//Edit position of marker
 		$scope.editLngLat=function(){
 			if(typeof $scope.selectedPlace.name != 'undefined')
 			{
 				modeEdit=true; //Enable mode edit marker
+				//Chạy vòng lặp để tạm thời xóa hết điểm trên bản đồ
 				angular.forEach(markers,function(value, key){
 					if(value.position.lat()==$scope.selectedPlace.lat && value.position.lng()) //Nếu điểm trong danh sách là điểm click
 					{
-						var oldMarker=value;
+						oldMarker=value;
 					}
 					//alert($scope.selectedPlace.name);
 					value.setMap(null);
@@ -310,6 +352,28 @@
 			else
 				alert('Please chose marker to replace!');
 		}
+		//Delete marker
+		$scope.deleteMarker=function(){
+			var confirm=window.confirm('Are you sure to delete '+$scope.selectedPlace.name);
+			if(confirm)
+			{
+				$http.get('/place/'+$scope.selectedPlace.id+'/delete').success(function(response){
+					if(response==1)
+					{
+						alert('Delete success');
+						//Tìm và xóa điểm trên map
+						angular.forEach(markers,function(value, key){
+							if(value.position.lat()==$scope.selectedPlace.lat&&value.position.lng()==$scope.selectedPlace.lon)
+							{
+								value.setMap(null);
+							}
+						});
+					}
+					else
+						alert('Error');
+				});
+			}
+		};
 	});
 	</script>
 </body>

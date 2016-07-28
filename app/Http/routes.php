@@ -28,3 +28,5 @@ Route::post('place/{id}/update',['as'=>'place.update','uses'=>'PlacesController@
 //Create and store place
 Route::get('place/create',['as'=>'place.create','uses'=>'PlacesController@create']);
 Route::post('place/store',['as'=>'place.store','uses'=>'PlacesController@store']);
+//Delete place
+Route::get('place/{id}/delete',['as'=>'place.destroy','uses'=>'PlacesController@delete']);

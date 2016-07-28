@@ -52,4 +52,11 @@ class PlacesController extends Controller
 		]);
 		return "Update Success";
 	}
+	public function delete($id)
+	{
+		//Kiểm tra quyền user trước khi xóa...
+		$place=Place::findOrFail($id);
+		$place->delete();
+		return 1;
+	}
 }
