@@ -17,10 +17,12 @@ Route::get('checkDatabase',function(){
 	return DB::connection()->getDatabaseName();
 });
 Route::get('checkView',function(){
-	return view('googlemap.example');
+	return Auth::user();
 });
 
 //Route App
+
+//Place
 //List and edit place
 Route::get('place/getList',['as'=>'place.getList','uses'=>'PlacesController@getList']);
 Route::get('place/index',['as'=>'place.index','uses'=>'PlacesController@index']);
@@ -30,3 +32,12 @@ Route::get('place/create',['as'=>'place.create','uses'=>'PlacesController@create
 Route::post('place/store',['as'=>'place.store','uses'=>'PlacesController@store']);
 //Delete place
 Route::get('place/{id}/delete',['as'=>'place.destroy','uses'=>'PlacesController@delete']);
+
+//User
+//Login & Logout
+Route::get('login',['as'=>'getLogin','uses'=>'Auth\AuthController@getLogin']);
+Route::post('login',['as'=>'postLogin','uses'=>'Auth\AuthController@postLogin']);
+Route::get('logout',['as'=>'getLogout','uses'=>'Auth\AuthController@getLogout']);
+//Register
+Route::get('register',['as'=>'getRegister','uses'=>'Auth\AuthController@getRegister']);
+Route::post('register',['as'=>'postRegister','uses'=>'Auth\AuthController@postRegister']);
