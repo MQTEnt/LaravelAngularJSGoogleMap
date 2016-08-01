@@ -94,6 +94,8 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 				//Click marer event
 				marker.addListener('click',function(){
 					$scope.selectedPlace=markerProp;
+					//Gọi hàm để lấy review tương ứng
+					getBestRevews();
 					//Chú ý sử dụng $apply() để đồng bộ với controller
 					$scope.$apply();
 					//Hiển thị infowindow cho marker
@@ -107,6 +109,11 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 
 	//Update...
 	$scope.updatePlace=function(id){
+		if(typeof $scope.selectedPlace.id == 'undefined')
+		{
+			alert('Please choose place for updating');
+			return 0;
+		}
 		var data; //Dữ liệu gửi tới server
 		if(modeEdit==true)
 		{
@@ -117,7 +124,7 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 		}
 		data=$.param($scope.selectedPlace); //Gán dữ liệu
 
-		console.log(data);
+		//console.log(data);
 		$http({
 			method: 'POST',
 			url: '/place/'+id+'/update',
@@ -160,6 +167,7 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 				//Click marer event
 				marker.addListener('click',function(){
 					$scope.selectedPlace=markerProp;
+					getBestRevews();
 					//Chú ý sử dụng $apply() để đồng bộ với controller
 					$scope.$apply();
 					//Hiển thị infowindow cho marker
@@ -183,7 +191,7 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 	};
 	//Edit position of marker
 	$scope.editLngLat=function(){
-		if(typeof $scope.selectedPlace.name != 'undefined')
+		if(typeof $scope.selectedPlace.id != 'undefined')
 		{
 			modeEdit=true; //Enable mode edit marker
 			//Chạy vòng lặp để tạm thời xóa hết điểm trên bản đồ
@@ -202,24 +210,68 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 	}
 	//Delete marker
 	$scope.deleteMarker=function(){
-		var confirm=window.confirm('Are you sure to delete '+$scope.selectedPlace.name);
-		if(confirm)
+		if(typeof $scope.selectedPlace.id != 'undefined')
 		{
-			$http.get('/place/'+$scope.selectedPlace.id+'/delete').success(function(response){
-				if(response==1)
-				{
-					alert('Delete success');
-					//Tìm và xóa điểm trên map
-					angular.forEach(markers,function(value, key){
-						if(value.position.lat()==$scope.selectedPlace.lat&&value.position.lng()==$scope.selectedPlace.lon)
-						{
-							value.setMap(null);
-						}
-					});
-				}
-				else
-					alert('Error');
+			var confirm=window.confirm('Are you sure to delete '+$scope.selectedPlace.name);
+			if(confirm)
+			{
+				$http.get('/place/'+$scope.selectedPlace.id+'/delete').success(function(response){
+					if(response==1)
+					{
+						alert('Delete success');
+						//Tìm và xóa điểm trên map
+						angular.forEach(markers,function(value, key){
+							if(value.position.lat()==$scope.selectedPlace.lat&&value.position.lng()==$scope.selectedPlace.lon)
+							{
+								value.setMap(null);
+							}
+						});
+					}
+					else
+						alert('Error');
+				});
+			}
+		}
+		else
+		{
+			alert('Please choose place for deleting');
+		}
+	};
+	//Add new review
+	$scope.addNewReview=function(){
+		if(typeof $scope.selectedPlace.id != 'undefined')
+		{
+			//Validate $scope.newReview trước đó tại view (Updating...)
+			var dataSend=$.param($scope.newReview);
+			dataSend=dataSend+'&place_id='+$scope.selectedPlace.id; //Thêm place_id cho data gửi đi
+			//console.log(dataSend);
+			$http({
+				method: 'POST',
+				data: dataSend,
+				url: '/review/store',
+				headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+			})
+			.success(function(response){
+				alert(response);
+				$scope.newReview.title='';
+				$scope.newReview.content='';
+				$scope.newReview.tags='';
+			})
+			.error(function(){
+				alert('Error');
 			});
 		}
+		else
+		{
+			alert('Pleace choose marker');
+		}
+	};
+	//List best reviews
+	function getBestRevews()
+	{
+		$http.get('/bestReviews/'+$scope.selectedPlace.id)
+		.success(function(response){
+			$scope.bestReviews=response;
+		});
 	};
 });

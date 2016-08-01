@@ -74,11 +74,7 @@
 							<div class="panel-body">
 								<form class="form-horizontal">
 									<div class="list-group">
-										<a href="#" class="list-group-item">Bài review 1<span class="badge">1</span></a>
-										<a href="#" class="list-group-item">Bài review 2<span class="badge">2</span></a>
-										<a href="#" class="list-group-item">Bài review 3<span class="badge">3</span></a>
-										<a href="#" class="list-group-item">Bài review 4<span class="badge">4</span></a>
-										<a href="#" class="list-group-item">Bài review 5<span class="badge">5</span></a>
+										<a href="#" class="list-group-item" ng-repeat="review in bestReviews">{{review.title}}<span class="badge">{{review.votes}}</span></a>
 									</div>
 									<div class="row">
 										<div class="col-sm-1 col-sm-offset-10">
@@ -100,24 +96,24 @@
 																<div class="form-group">
 																	<label class="col-sm-3 col-sm-offset-1">Title:</label>
 																	<div class="col-sm-10 col-sm-offset-1">
-																		<input type="text" class="form-control" placeholder="Fill the title">
+																		<input ng-model="newReview.title" type="text" class="form-control" placeholder="Fill the title">
 																	</div>
 																</div>
 																<div class="form-group">
 																	<label class="col-sm-3 col-sm-offset-1">Content:</label>
 																	<div class="col-sm-10 col-sm-offset-1">
-																		<textarea name="" id="" class="form-control" row="5"></textarea>
+																		<textarea ng-model="newReview.content" class="form-control" row="5"></textarea>
 																	</div>
 																</div>
 																<div class="form-group">
 																	<label class="col-sm-3 col-sm-offset-1">Tag:</label>
 																	<div class="col-sm-10 col-sm-offset-1">
-																		<input type="text" class="form-control" placeholder="Eg: Park, Zoo, Beautiful...">
+																		<input ng-model="newReview.tags" type="text" class="form-control" placeholder="Eg: Park, Zoo, Beautiful...">
 																	</div>
 																</div>
 																<div class="form-group">
 																	<div class="col-sm-11">
-																		<button class="btn btn-success pull-right" type="button">Submit</button>
+																		<button ng-click="addNewReview()" class="btn btn-success pull-right" type="button">Submit</button>
 																	</div>
 																</div>
 															</div>

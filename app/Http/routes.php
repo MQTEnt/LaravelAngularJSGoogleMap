@@ -17,7 +17,7 @@ Route::get('checkDatabase',function(){
 	return DB::connection()->getDatabaseName();
 });
 Route::get('checkView',function(){
-	return Auth::user();
+	return Auth::user()->id;
 });
 
 //Route App
@@ -41,3 +41,7 @@ Route::get('logout',['as'=>'getLogout','uses'=>'Auth\AuthController@getLogout'])
 //Register
 Route::get('register',['as'=>'getRegister','uses'=>'Auth\AuthController@getRegister']);
 Route::post('register',['as'=>'postRegister','uses'=>'Auth\AuthController@postRegister']);
+
+//Review place
+Route::post('review/store',['as'=>'review.store','uses'=>'ReviewsController@store']);
+Route::get('bestReviews/{place_id}',['as'=>'review.best','uses'=>'ReviewsController@best']);
