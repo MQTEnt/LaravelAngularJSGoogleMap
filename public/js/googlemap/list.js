@@ -65,9 +65,10 @@ function placeMarker(location)
 //AngularJS
 var gmApp=angular.module('googlemapApp',[]);
 gmApp.controller('googlemapCtrl',function($scope, $http){
-	$scope.selectedPlace='unknow';
+	$scope.selectedPlace={};
 	//Khai báo hàm getList() (lấy danh sách marker và hiển thị) 
-	$scope.getList=function(){
+	function getList()
+	{
 		$http.get('/place/getList').success(function(dataPlaces)
 		{
 			angular.forEach(dataPlaces,function(value, key)
@@ -105,7 +106,7 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 		});
 	};
 	//Gọi hàm getList();
-	$scope.getList();
+	getList();
 
 	//Update...
 	$scope.updatePlace=function(id){
@@ -241,9 +242,12 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 	$scope.addNewReview=function(){
 		if(typeof $scope.selectedPlace.id != 'undefined')
 		{
-			//Validate $scope.newReview trước đó tại view (Updating...)
+			//
+			//Validate $scope.newReview trước đó tại view (Updating...): Không được để trong các input title, tags nếu không $scope.newReview sẽ undefine
+			//
 			var dataSend=$.param($scope.newReview);
 			dataSend=dataSend+'&place_id='+$scope.selectedPlace.id; //Thêm place_id cho data gửi đi
+			dataSend=dataSend+'&content='+encodeURI($('#editor').html()); //Lấy thêm conent từ editor-wysiwyg vào data gửi đi, chú ý convert từ string sang URI
 			//console.log(dataSend);
 			$http({
 				method: 'POST',
@@ -254,7 +258,6 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 			.success(function(response){
 				alert(response);
 				$scope.newReview.title='';
-				$scope.newReview.content='';
 				$scope.newReview.tags='';
 			})
 			.error(function(){

@@ -6,6 +6,7 @@
 	<link rel="stylesheet" href="/css/mystyle.css">
 	<link rel="stylesheet" href="/css/bootstrap.min.css">
 	<script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBJZuC9pIER2R-A1bHmIU9swuSfGclEHSk"></script>
+	<script src="/js/jquery.min.js"></script> <!--jQuery cần phải load trước các include wysiwyg -->
 </head>
 <body>
 	<div class="container">
@@ -101,9 +102,11 @@
 																</div>
 																<div class="form-group">
 																	<label class="col-sm-3 col-sm-offset-1">Content:</label>
-																	<div class="col-sm-10 col-sm-offset-1">
-																		<textarea ng-model="newReview.content" class="form-control" row="5"></textarea>
+																	<!--Wysiwyg-->
+																	<div id="editor-wysiwyg" class="col-sm-10 col-sm-offset-1">
+																		<!-- Load Wysiwyg by Ajax -->
 																	</div>
+																	<!--End Wysiwyg-->
 																</div>
 																<div class="form-group">
 																	<label class="col-sm-3 col-sm-offset-1">Tag:</label>
@@ -133,9 +136,10 @@
 			</div>
 		</div>
 	</div>
-	<script src="/js/jquery.min.js"></script>
 	<script src="/js/bootstrap.min.js"></script>
 	<script src="/js/angular.min.js"></script>
 	<script src="/js/googlemap/list.js"></script>
+	<!-- Trigger loads Editor Wysiwyg-->
+	<script src="/js/editor/load-editor.js"></script>
 </body>
 </html>
