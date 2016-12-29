@@ -188,7 +188,7 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 	//Vote Button
 	$scope.votes=function(){
 		//Dùng Ajax để kiểm tra user đã vote địa điểm này hay chưa, sau đó xử lý
-		alert('vote place');
+		alert('vote place (Comming soon...)');
 	};
 	//Edit position of marker
 	$scope.editLngLat=function(){
@@ -219,12 +219,16 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 				$http.get('/place/'+$scope.selectedPlace.id+'/delete').success(function(response){
 					if(response==1)
 					{
+						key_delete = null;
 						alert('Delete success');
 						//Tìm và xóa điểm trên map
 						angular.forEach(markers,function(value, key){
 							if(value.position.lat()==$scope.selectedPlace.lat&&value.position.lng()==$scope.selectedPlace.lon)
 							{
 								value.setMap(null);
+								//Delete marker from markers
+								markers.splice(key, 1);
+								return;
 							}
 						});
 					}
