@@ -226,7 +226,7 @@ gmApp.controller('googlemapCtrl',function($scope, $http){
 							if(value.position.lat()==$scope.selectedPlace.lat&&value.position.lng()==$scope.selectedPlace.lon)
 							{
 								value.setMap(null);
-								//Delete marker from markers
+								//Delete marker from markers 
 								markers.splice(key, 1);
 								return;
 							}
