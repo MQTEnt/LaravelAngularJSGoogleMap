@@ -21,24 +21,6 @@ var markers=[]; //Các điểm trên map
 var newMarker;	//Điểm mới (dành cho chức năng sửa điểm mới)
 var modeEdit=false;
 var oldMarker;
-function initMap()
-{
-	//Thông tin map
-	var mapProp = {
-		center:myCenter,
-		zoom:15,
-		mapTypeId:google.maps.MapTypeId.ROADMAP
-	};
-	map = new google.maps.Map(document.getElementById("googleMap"),mapProp);
-
-	//Setting click map event
-	google.maps.event.addListener(map, 'click', function(event) {
-		placeMarker(event.latLng);
-	});
-};
-//Load map
-google.maps.event.addDomListener(window, 'load', initMap);
-
 //Click map event
 function placeMarker(location) 
 {
@@ -65,44 +47,70 @@ function placeMarker(location)
 //AngularJS
 var gmApp=angular.module('googlemapApp',[]);
 gmApp.controller('googlemapCtrl',function($scope, $http){
+	/*
+	*	Các hàm init map phải để trong angular app vì trong hàm initMap có dùng $scope
+	*	nên phải đặt bên trong app angular
+	*/
+	function initMap(dataPlaces)
+	{
+		//Thông tin map
+		var mapProp = {
+			center:myCenter,
+			zoom:15,
+			mapTypeId:google.maps.MapTypeId.ROADMAP
+		};
+		map = new google.maps.Map(document.getElementById("googleMap"),mapProp);
+
+		$.each(dataPlaces,function(key, value)
+		{
+			//Tạo marker
+			var marker = new google.maps.Marker({
+				position: {lat: parseFloat(value.lat), lng: parseFloat(value.lon)},
+				map: map
+			});
+			markers.push(marker);
+			//Gán giá trị cho marker vừa tạo
+			var markerProp = new Object(); //Tạo object mới chứa thông tin của marker
+			markerProp.id=value.id;
+			markerProp.name=value.name;
+			markerProp.description=value.description;
+			markerProp.lat=value.lat;
+			markerProp.lon=value.lon;
+			markerProp.votes=value.votes;
+
+			//Khai báo infowindow cho marker
+			var infowindow = new google.maps.InfoWindow({
+					content: value.name
+			});
+			//Click marer event
+			marker.addListener('click',function(){
+				$scope.selectedPlace=markerProp;
+				//Gọi hàm để lấy review tương ứng (tạm thời bỏ)
+				//getBestRevews();
+				//Chú ý sử dụng $apply() để đồng bộ với controller
+				$scope.$apply();
+				//Hiển thị infowindow cho marker
+				infowindow.open(map,marker);
+			});
+			console.log(key);
+		});
+
+		//Setting click map event
+		google.maps.event.addListener(map, 'click', function(event) {
+			placeMarker(event.latLng);
+		});
+	};
 	$scope.selectedPlace={};
 	//Khai báo hàm getList() (lấy danh sách marker và hiển thị) 
 	function getList()
 	{
 		$http.get('/place/getList').success(function(dataPlaces)
 		{
-			angular.forEach(dataPlaces,function(value, key)
-			{
-				//Tạo marker
-				var marker = new google.maps.Marker({
-					position: {lat: parseFloat(value.lat), lng: parseFloat(value.lon)},
-					map: map
-				});
-				markers.push(marker);
-				//Gán giá trị cho marker vừa tạo
-				var markerProp = new Object(); //Tạo object mới chứa thông tin của marker
-				markerProp.id=value.id;
-				markerProp.name=value.name;
-				markerProp.description=value.description;
-				markerProp.lat=value.lat;
-				markerProp.lon=value.lon;
-				markerProp.votes=value.votes;
-
-				//Khai báo infowindow cho marker
-				var infowindow = new google.maps.InfoWindow({
-						content: value.name
-				});
-				//Click marer event
-				marker.addListener('click',function(){
-					$scope.selectedPlace=markerProp;
-					//Gọi hàm để lấy review tương ứng
-					getBestRevews();
-					//Chú ý sử dụng $apply() để đồng bộ với controller
-					$scope.$apply();
-					//Hiển thị infowindow cho marker
-					infowindow.open(map,marker);
-				});
-			});	
+			/*
+			*	Lưu ý giống phần create.js
+			*/
+			//Load map
+			google.maps.event.addDomListener(window, 'load', initMap(dataPlaces));
 		});
 	};
 	//Gọi hàm getList();

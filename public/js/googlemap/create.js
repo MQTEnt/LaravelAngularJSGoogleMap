@@ -7,16 +7,30 @@ var placeLon;
 var placeDescription;
 var placeName;
 var infowindow; //Thông tin điểm 
-function initMap()
+function initMap(dataPlaces)
 {
 	var mapProp = {
 		center:myCenter,
 		zoom:15,
 		mapTypeId:google.maps.MapTypeId.ROADMAP
 	};
-
 	map = new google.maps.Map(document.getElementById("googleMap"),mapProp);
-
+	console.log(dataPlaces);
+	//sửa lại hàm $.each này sang một hàm JavaScript thuần cho đồng bộ
+	$.each(dataPlaces, function(key, value){
+			//Tạo marker
+			var markers = new google.maps.Marker({
+				position: {lat: parseFloat(value.lat), lng: parseFloat(value.lon)},
+				map: map
+			});
+			//Tạo sự kiện click cho marker
+			markers.addListener('click',function(){
+				infowindows = new google.maps.InfoWindow({
+					content: value.name
+				});
+				infowindows.open(map,markers);
+			});
+	});
 	google.maps.event.addListener(map, 'click', function(event) {
 		placeMarker(event.latLng);
 	});
@@ -41,26 +55,17 @@ function placeMarker(location)
 	infowindow.open(map,myMarker);
 }
 //Load bản đồ sau khi đã khai báo các thành phần
-google.maps.event.addDomListener(window, 'load', initMap);
 
 //Get list place từ server
 $(document).ready(function(){
 	$.get('/place/getList',function(dataPlaces){
 		//console.log(dataPlaces);
-		$.each(dataPlaces, function(key, value){
-			//Tạo marker
-			var markers = new google.maps.Marker({
-				position: {lat: parseFloat(value.lat), lng: parseFloat(value.lon)},
-				map: map
-			});
-			//Tạo sự kiện click cho marker
-			markers.addListener('click',function(){
-				infowindows = new google.maps.InfoWindow({
-					content: value.name
-				});
-				infowindows.open(map,markers);
-			});
-		});
+		/*
+		*	Cần phải đưa hàm load map (google.maps.event.addDomListener) vào trong callback function này
+		*	để tránh việc không hiển thị marker trên bản đồ (mặc dù một số trường hợp load được vì đường truyền mạng)
+		*	hoặc sử dụng các loại trình duyệt khác nhau
+		*/
+		google.maps.event.addDomListener(window, 'load', initMap(dataPlaces));
 	});
 });
 
